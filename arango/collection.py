@@ -50,11 +50,13 @@ from arango.result import Result
 from arango.typings import Fields, Headers, Json, Jsons, Params
 from arango.utils import (
     build_filter_conditions,
+    build_sort_expression,
     get_batches,
     get_doc_id,
     is_none_or_bool,
     is_none_or_int,
     is_none_or_str,
+    validate_sort_parameters,
 )
 
 
@@ -753,6 +755,7 @@ class Collection(ApiGroup):
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         allow_dirty_read: bool = False,
+        sort: Sequence[Json] = [],
     ) -> Result[Cursor]:
         """Return all documents that match the given filters.
 
@@ -771,6 +774,8 @@ class Collection(ApiGroup):
         assert isinstance(filters, dict), "filters must be a dict"
         assert is_none_or_int(skip), "skip must be a non-negative int"
         assert is_none_or_int(limit), "limit must be a non-negative int"
+        if sort:
+            validate_sort_parameters(sort)
 
         skip_val = skip if skip is not None else 0
         limit_val = limit if limit is not None else "null"
@@ -778,9 +783,9 @@ class Collection(ApiGroup):
             FOR doc IN @@collection
                 {build_filter_conditions(filters)}
                 LIMIT {skip_val}, {limit_val}
+                {build_sort_expression(sort)}
                 RETURN doc
         """
-
         bind_vars = {"@collection": self.name}
 
         request = Request(

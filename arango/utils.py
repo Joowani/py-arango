@@ -126,3 +126,42 @@ def build_filter_conditions(filters: Json) -> str:
         conditions.append(f"doc.{field} == {json.dumps(v)}")
 
     return "FILTER " + " AND ".join(conditions)
+
+
+def validate_sort_parameters(sort: Sequence[Json]) -> bool:
+    """Validate sort parameters for an AQL query.
+
+    :param sort: Document sort parameters.
+    :type sort: Sequence[Json]
+    :return: Validation success.
+    :rtype: bool
+    :raise arango.exceptions.DocumentGetError: If sort parameters are invalid.
+    """
+    assert isinstance(sort, Sequence)
+    for param in sort:
+        if "sort_by" not in param or "sort_order" not in param:
+            raise DocumentParseError(
+                "Each sort parameter must have 'sort_by' and 'sort_order'."
+            )
+        if param["sort_order"].upper() not in ["ASC", "DESC"]:
+            raise DocumentParseError("'sort_order' must be either 'ASC' or 'DESC'")
+    return True
+
+
+def build_sort_expression(sort: Sequence[Json]) -> str:
+    """Build a sort condition for an AQL query.
+
+    :param sort: Document sort parameters.
+    :type sort: Sequence[Json]
+    :return: The complete AQL sort condition.
+    :rtype: str
+    """
+    if not sort:
+        return ""
+
+    sort_chunks = []
+    for sort_param in sort:
+        chunk = f"doc.{sort_param['sort_by']} {sort_param['sort_order']}"
+        sort_chunks.append(chunk)
+
+    return "SORT " + ", ".join(sort_chunks)

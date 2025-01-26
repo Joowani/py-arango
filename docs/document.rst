@@ -103,6 +103,12 @@ Standard documents are managed via collection API wrapper:
         assert student['GPA'] == 3.6
         assert student['last'] == 'Kim'
 
+    # Retrieve one or more matching documents, sorted by a field.
+    for student in students.find({'first': 'John'}, sort=[{'sort_by': 'GPA', 'sort_order': 'DESC'}]):
+        assert student['_key'] == 'john'
+        assert student['GPA'] == 3.6
+        assert student['last'] == 'Kim'
+
     # Retrieve a document by key.
     students.get('john')
 

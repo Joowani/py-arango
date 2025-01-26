@@ -1162,6 +1162,26 @@ def test_document_find(col, bad_col, docs):
     # Set up test documents
     col.import_bulk(docs)
 
+    # Test find with sort expression (single field)
+    found = list(col.find({}, sort=[{"sort_by": "text", "sort_order": "ASC"}]))
+    assert len(found) == 6
+    assert found[0]["text"] == "bar"
+    assert found[-1]["text"] == "foo"
+
+    # Test find with sort expression (multiple fields)
+    found = list(
+        col.find(
+            {},
+            sort=[
+                {"sort_by": "text", "sort_order": "ASC"},
+                {"sort_by": "val", "sort_order": "DESC"},
+            ],
+        )
+    )
+    assert len(found) == 6
+    assert found[0]["val"] == 6
+    assert found[-1]["val"] == 1
+
     # Test find (single match) with default options
     found = list(col.find({"val": 2}))
     assert len(found) == 1
