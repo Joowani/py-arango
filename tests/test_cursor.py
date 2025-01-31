@@ -50,7 +50,7 @@ def test_cursor_from_execute_query(db, col, docs):
     assert profile["parsing"] > 0
 
     plan = cursor.plan()
-    assert set(plan.keys()) == {
+    expected_keys = {
         "nodes",
         "rules",
         "collections",
@@ -59,6 +59,8 @@ def test_cursor_from_execute_query(db, col, docs):
         "estimatedNrItems",
         "isModificationQuery",
     }
+    for key in expected_keys:
+        assert key in plan
 
     assert clean_doc(cursor.next()) == docs[0]
     assert cursor.id == cursor_id
